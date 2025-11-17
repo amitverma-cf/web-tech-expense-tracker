@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expense Tracker</title>
+  <script src="/chart.js"></script>
+</head>
+<body>
+  <h1>Expense Tracker</h1>
+
+  <h2>Add Transaction</h2>
+  <form id="transactionForm">
+    <select id="type">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <input type="number" id="amount" placeholder="Amount" required>
+    <input type="date" id="date" required>
+    <input type="text" id="category" placeholder="Category" required>
+    <input type="text" id="description" placeholder="Description" required>
+    <label><input type="checkbox" id="recurring"> Recurring</label>
+    <button type="submit">Add</button>
+  </form>
+
+  <h2>Add Category</h2>
+  <form id="categoryForm">
+    <input type="text" id="catName" placeholder="Name" required>
+    <button type="submit">Add</button>
+  </form>
+
+  <h2>Add Budget</h2>
+  <form id="budgetForm">
+    <input type="text" id="budCategory" placeholder="Category" required>
+    <input type="number" id="limit" placeholder="Limit" required>
+    <input type="text" id="period" placeholder="Period" required>
+    <button type="submit">Add</button>
+  </form>
+
+  <h2>Monthly Analytics</h2>
+  <canvas id="analyticsChart"></canvas>
+
+  <script>
+    const transactionForm = document.getElementById('transactionForm');
+    const categoryForm = document.getElementById('categoryForm');
+    const budgetForm = document.getElementById('budgetForm');
+    const ctx = document.getElementById('analyticsChart').getContext('2d');
+    let chart = null;
+
+    transactionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        type: document.getElementById('type').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        date: document.getElementById('date').value,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        recurring: document.getElementById('recurring').checked
+      };
+      console.log('Submitting transaction', data);
+      try {
+        const res = await fetch('/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        console.log('Response', res.status, await res.json());
+        loadAnalytics();
+      } catch (err) {
+        console.error('Error', err);
+      }
+    });
+
+    categoryForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = { name: document.getElementById('catName').value };
+      console.log('Submitting category', data);
+      try {
+        const res = await fetch('/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        console.log('Response', res.status, await res.json());
+      } catch (err) {
+        console.error('Error', err);
+      }
+    });
+
+    budgetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        category: document.getElementById('budCategory').value,
+        limit: parseFloat(document.getElementById('limit').value),
+        period: document.getElementById('period').value
+      };
+      console.log('Submitting budget', data);
+      try {
+        const res = await fetch('/budgets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        console.log('Response', res.status, await res.json());
+      } catch (err) {
+        console.error('Error', err);
+      }
+    });
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch('/reports/monthly');
+        const data = await res.json();
+        console.log('Analytics data', data);
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(data.byCategory),
+            datasets: [{
+              label: 'Spending by Category',
+              data: Object.values(data.byCategory)
+            }]
+          }
+        });
+      } catch (e) {
+        console.error('Load analytics error:', e);
+      }
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>
