@@ -1,9 +1,11 @@
 # Expense Tracker API
 
 ## Setup
+```bash
 pnpm install
 pnpm build
 pnpm start
+```
 
 ## UI
 Open http://localhost:3000 in browser for UI with forms and charts.
