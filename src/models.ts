@@ -21,14 +21,16 @@ interface IBudget {
 
 export class Transaction implements ITransaction {
   id: string;
+  type: string;
   amount: number;
   date: Date;
   category: string;
   description: string;
   recurring: boolean;
 
-  constructor(id: string, amount: number, date: Date, category: string, description: string, recurring: boolean = false) {
+  constructor(id: string, type: string, amount: number, date: Date, category: string, description: string, recurring: boolean = false) {
     this.id = id;
+    this.type = type;
     this.amount = amount;
     this.date = date;
     this.category = category;
@@ -39,13 +41,13 @@ export class Transaction implements ITransaction {
 
 export class Income extends Transaction {
   constructor(id: string, amount: number, date: Date, category: string, description: string, recurring: boolean = false) {
-    super(id, amount, date, category, description, recurring);
+    super(id, 'income', amount, date, category, description, recurring);
   }
 }
 
 export class Expense extends Transaction {
   constructor(id: string, amount: number, date: Date, category: string, description: string, recurring: boolean = false) {
-    super(id, amount, date, category, description, recurring);
+    super(id, 'expense', amount, date, category, description, recurring);
   }
 }
 

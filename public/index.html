@@ -1,518 +1,415 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Tracker</title>
+  <title>ExpenseTrack Pro</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Halant:wght@300;400;500;600;700&family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  
+  <!-- Animations -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  
+  <!-- Chart.js -->
   <script src="/chart.js"></script>
+
+  <!-- Tailwind & Flowbite Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gray: {
+              50: '#f9fafb',
+              100: '#f3f4f6',
+              200: '#e5e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#262626', // Card Background
+              900: '#1D1D1D', // Main Background
+            },
+            primary: {
+              50: '#fdf8f6',
+              100: '#f2e8e0',
+              200: '#eaddd0',
+              300: '#dcbfae',
+              400: '#cba085',
+              500: '#BA875C', // Accent 1
+              600: '#9e6d46',
+              700: '#845638',
+              800: '#6b442e',
+              900: '#553526',
+            },
+            secondary: {
+              50: '#f4f6f5',
+              100: '#e6e9e7',
+              200: '#d0d6d2',
+              300: '#b0b9b4',
+              400: '#8a9891',
+              500: '#596B5F', // Accent 2
+              600: '#46554b',
+              700: '#38443c',
+              800: '#2d3630',
+              900: '#242b26',
+            },
+            red: {
+              50: '#fdf2f2',
+              100: '#fde8e8',
+              200: '#fbd5d5',
+              300: '#f8b4b4',
+              400: '#f28b8b',
+              500: '#C06060', // Muted Red matching theme
+              600: '#A64D4D',
+              700: '#8C3B3B',
+              800: '#732D2D',
+              900: '#4A1A1A',
+            },
+            customText: '#D1CAC2',
+          },
+          fontFamily: {
+            sans: ['Nunito Sans', 'sans-serif'],
+            serif: ['Halant', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #0a0a0a;
-      --card: #18181b;
-      --border: #27272a;
-      --text: #fafafa;
-      --muted: #a1a1aa;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --success: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: 70px;
+      background-color: #1D1D1D;
+      color: #D1CAC2;
     }
-    @media (min-width: 768px) {
-      body { padding-bottom: 0; padding-left: 250px; }
+    /* Custom scrollbar for webkit */
+    ::-webkit-scrollbar {
+      width: 8px;
     }
-    .sidebar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      padding: 12px;
-      z-index: 100;
+    ::-webkit-scrollbar-track {
+      background: #1D1D1D; 
     }
-    @media (min-width: 768px) {
-      .sidebar {
-        top: 0;
-        bottom: 0;
-        right: auto;
-        width: 250px;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 24px 16px;
-        border-top: none;
-        border-right: 1px solid var(--border);
-      }
-    }
-    .logo {
-      display: none;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 32px;
-      color: var(--primary);
-    }
-    @media (min-width: 768px) {
-      .logo { display: block; }
-    }
-    .nav-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 12px;
-      border-radius: 8px;
-      transition: all 0.2s;
-      font-size: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-    @media (min-width: 768px) {
-      .nav-btn {
-        flex-direction: row;
-        justify-content: flex-start;
-        width: 100%;
-        gap: 12px;
-        margin-bottom: 4px;
-      }
-    }
-    .nav-btn:hover { background: var(--border); color: var(--text); }
-    .nav-btn.active { background: var(--primary); color: var(--text); }
-    .icon { font-size: 20px; }
-    .main {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      animation: fadeIn 0.3s;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .header {
-      margin-bottom: 24px;
-    }
-    .header h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .header p {
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      transition: all 0.2s;
-    }
-    .card:hover {
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-    .form-input, .form-select {
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    .form-input:focus, .form-select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .checkbox {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-    }
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
-    @media (min-width: 768px) {
-      .grid-2 { grid-template-columns: repeat(2, 1fr); }
-      .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    }
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      animation: slideUp 0.3s;
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .stat-label {
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-    }
-    .stat-change {
-      font-size: 12px;
-      margin-top: 4px;
-    }
-    .list-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: var(--bg);
-      border-radius: 8px;
-      margin-bottom: 8px;
-      transition: all 0.2s;
-    }
-    .list-item:hover {
-      background: var(--border);
-    }
-    .list-info {
-      flex: 1;
-    }
-    .list-title {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    .list-meta {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .list-amount {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .income { color: var(--success); }
-    .expense { color: var(--danger); }
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--success); }
-    .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-top: 20px;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted);
-    }
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-    @media (min-width: 768px) {
-      .form-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-      }
-    }
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: var(--border);
+    ::-webkit-scrollbar-thumb {
+      background: #374151; 
       border-radius: 4px;
-      overflow: hidden;
-      margin-top: 8px;
     }
-    .progress-fill {
-      height: 100%;
-      background: var(--primary);
-      transition: width 0.3s;
-    }
-    .budget-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .budget-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .budget-category {
-      font-weight: 600;
-      font-size: 16px;
-    }
-    .budget-amount {
-      font-size: 14px;
-      color: var(--muted);
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4b5563; 
     }
   </style>
 </head>
-<body>
-  <div class="sidebar">
-    <div class="logo">💰 ExpenseTrack</div>
-    <button class="nav-btn active" data-tab="dashboard">
-      <span class="icon">📊</span>
-      <span>Dashboard</span>
-    </button>
-    <button class="nav-btn" data-tab="transactions">
-      <span class="icon">💸</span>
-      <span>Transactions</span>
-    </button>
-    <button class="nav-btn" data-tab="categories">
-      <span class="icon">🏷️</span>
-      <span>Categories</span>
-    </button>
-    <button class="nav-btn" data-tab="budgets">
-      <span class="icon">🎯</span>
-      <span>Budgets</span>
-    </button>
-    <button class="nav-btn" data-tab="reports">
-      <span class="icon">📈</span>
-      <span>Reports</span>
-    </button>
+<body class="antialiased bg-gray-900 text-customText font-sans">
+
+  <!-- Sidebar -->
+  <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0 bg-gray-800" aria-label="Sidebar">
+    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-800">
+      <a href="#" class="flex items-center ps-2.5 mb-8">
+        <span class="self-center text-2xl font-semibold whitespace-nowrap text-primary-500 font-serif">ExpenseTrack</span>
+      </a>
+      <ul class="space-y-2 font-medium">
+        <li>
+          <button type="button" class="nav-btn flex items-center w-full p-2 text-customText rounded-lg hover:bg-gray-700 group transition-colors duration-200" data-tab="dashboard">
+            <i class="lni lni-grid-alt text-xl text-gray-400 transition duration-75 group-hover:text-primary-500"></i>
+            <span class="ms-3">Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-btn flex items-center w-full p-2 text-customText rounded-lg hover:bg-gray-700 group transition-colors duration-200" data-tab="transactions">
+            <i class="lni lni-wallet text-xl text-gray-400 transition duration-75 group-hover:text-primary-500"></i>
+            <span class="ms-3">Transactions</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-btn flex items-center w-full p-2 text-customText rounded-lg hover:bg-gray-700 group transition-colors duration-200" data-tab="categories">
+            <i class="lni lni-tag text-xl text-gray-400 transition duration-75 group-hover:text-primary-500"></i>
+            <span class="ms-3">Categories</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-btn flex items-center w-full p-2 text-customText rounded-lg hover:bg-gray-700 group transition-colors duration-200" data-tab="budgets">
+            <i class="lni lni-target text-xl text-gray-400 transition duration-75 group-hover:text-primary-500"></i>
+            <span class="ms-3">Budgets</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-btn flex items-center w-full p-2 text-customText rounded-lg hover:bg-gray-700 group transition-colors duration-200" data-tab="reports">
+            <i class="lni lni-graph text-xl text-gray-400 transition duration-75 group-hover:text-primary-500"></i>
+            <span class="ms-3">Reports</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="p-4 sm:ml-64 min-h-screen pb-20 sm:pb-4">
+    <div class="p-4 mt-4">
+      
+      <!-- Dashboard -->
+      <div id="dashboard" class="tab-content animate__animated animate__fadeIn">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Financial Overview</h1>
+          <p class="text-gray-400">Track your expenses and income with professional insights</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Balance Card -->
+          <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+            <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Balance</h5>
+            <div class="flex items-center">
+              <p id="balance" class="text-3xl font-bold text-customText">₹0.00</p>
+              <span id="balanceArrow" class="ml-3 text-2xl"></span>
+            </div>
+            <p class="mt-2 text-xs text-gray-500">Updated just now</p>
+          </div>
+          <!-- Income Card -->
+          <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+            <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Income</h5>
+            <p id="income" class="text-3xl font-bold text-secondary-500">₹0.00</p>
+            <p class="mt-2 text-xs text-gray-500">This month</p>
+          </div>
+          <!-- Expenses Card -->
+          <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+            <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Expenses</h5>
+            <p id="expenses" class="text-3xl font-bold text-red-500">₹0.00</p>
+            <p class="mt-2 text-xs text-gray-500">This month</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="p-6 bg-gray-800 rounded-lg shadow animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+            <h5 class="mb-4 text-xl font-bold text-customText font-serif pl-3">Spending Analytics</h5>
+            <div class="relative h-64 w-full">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+          </div>
+          <div class="p-6 bg-gray-800 rounded-lg shadow animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
+            <h5 class="mb-4 text-xl font-bold text-customText font-serif pl-3">Recent Transactions</h5>
+            <div id="recentTransactions" class="space-y-3">
+              <!-- Transactions injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <div id="transactions" class="tab-content hidden animate__animated animate__fadeIn">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Transactions</h1>
+          <p class="text-gray-400">Manage all your income and expenses</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Add Transaction Form -->
+          <div class="lg:col-span-1">
+            <div class="p-6 bg-gray-800 rounded-lg shadow">
+              <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">Add New</h5>
+              <form id="transactionForm" class="space-y-4">
+                <div>
+                  <label for="type" class="block mb-2 text-sm font-medium text-gray-400">Type</label>
+                  <select id="type" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" required>
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="amount" class="block mb-2 text-sm font-medium text-gray-400">Amount</label>
+                  <input type="number" id="amount" step="0.01" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" placeholder="0.00" required>
+                </div>
+                <div>
+                  <label for="date" class="block mb-2 text-sm font-medium text-gray-400">Date</label>
+                  <input type="date" id="date" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" required>
+                </div>
+                <div id="categoryContainer">
+                  <label for="category" class="block mb-2 text-sm font-medium text-gray-400">Category</label>
+                  <select id="category" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" required>
+                    <option value="">Select a category</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="description" class="block mb-2 text-sm font-medium text-gray-400">Description</label>
+                  <input type="text" id="description" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" placeholder="Description">
+                </div>
+                <div class="flex items-center mb-4">
+                  <input id="recurring" type="checkbox" class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2">
+                  <label for="recurring" class="ms-2 text-sm font-medium text-gray-400">Recurring Transaction</label>
+                </div>
+                <button type="submit" class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors duration-200">Add Transaction</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Transaction List -->
+          <div class="lg:col-span-2">
+            <div class="p-6 bg-gray-800 rounded-lg shadow">
+              <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">History</h5>
+              <div id="allTransactions" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                <!-- List items -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div id="categories" class="tab-content hidden animate__animated animate__fadeIn">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Categories</h1>
+          <p class="text-gray-400">Organize your transactions efficiently</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 bg-gray-800 rounded-lg shadow">
+            <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">Add Category</h5>
+            <form id="categoryForm" class="space-y-4">
+              <div>
+                <label for="catName" class="block mb-2 text-sm font-medium text-gray-400">Category Name</label>
+                <input type="text" id="catName" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" placeholder="e.g., Food & Dining" required>
+              </div>
+              <button type="submit" class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors duration-200">Add Category</button>
+            </form>
+          </div>
+          
+          <div class="p-6 bg-gray-800 rounded-lg shadow">
+            <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">All Categories</h5>
+            <div id="allCategories" class="space-y-2">
+              <!-- Categories list -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budgets -->
+      <div id="budgets" class="tab-content hidden animate__animated animate__fadeIn">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Budgets</h1>
+          <p class="text-gray-400">Set and track your spending limits</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1">
+            <div class="p-6 bg-gray-800 rounded-lg shadow">
+              <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">Create Budget</h5>
+              <form id="budgetForm" class="space-y-4">
+                <div>
+                  <label for="budgetCategory" class="block mb-2 text-sm font-medium text-gray-400">Category</label>
+                  <select id="budgetCategory" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" required>
+                    <option value="">Select a category</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="budgetLimit" class="block mb-2 text-sm font-medium text-gray-400">Limit Amount</label>
+                  <input type="number" id="budgetLimit" step="0.01" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" placeholder="0.00" required>
+                </div>
+                <div>
+                  <label for="budgetPeriod" class="block mb-2 text-sm font-medium text-gray-400">Period</label>
+                  <select id="budgetPeriod" class="bg-gray-700 text-customText text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5" required>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+                <button type="submit" class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors duration-200">Create Budget</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2">
+            <div id="allBudgets" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Budgets list -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports -->
+      <div id="reports" class="tab-content hidden animate__animated animate__fadeIn">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Reports & Insights</h1>
+          <p class="text-gray-400">Analyze your financial patterns</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+          <div class="p-6 bg-gray-800 rounded-lg shadow">
+            <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">Monthly Report</h5>
+            <div class="relative h-80 w-full">
+              <canvas id="monthlyChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="p-6 bg-gray-800 rounded-lg shadow flex items-center justify-between">
+            <div>
+              <h5 class="text-xl font-bold text-customText font-serif">Export Data</h5>
+              <p class="text-sm text-gray-400">Download your transaction history as CSV</p>
+            </div>
+            <button onclick="window.location.href='/reports/csv'" class="text-white bg-secondary-600 hover:bg-secondary-700 focus:ring-4 focus:outline-none focus:ring-secondary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center">
+              <i class="lni lni-download mr-2"></i>
+              Download CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <div class="main">
-    <div id="dashboard" class="tab-content active">
-      <div class="header">
-        <h1>Dashboard</h1>
-        <p>Overview of your finances</p>
-      </div>
-      <div class="grid grid-3">
-        <div class="stat-card">
-          <div class="stat-label">Total Income</div>
-          <div class="stat-value income" id="totalIncome"> ₹0</div>
-          <div class="stat-change">This month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Expenses</div>
-          <div class="stat-value expense" id="totalExpenses">₹0</div>
-          <div class="stat-change">This month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Balance</div>
-          <div class="stat-value" id="balance">₹0</div>
-          <div class="stat-change">Net income</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Spending by Category</div>
-        <div class="chart-container">
-          <canvas id="analyticsChart"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Recent Transactions</div>
-        <div id="recentTransactions"></div>
-      </div>
+  <!-- Bottom Navigation (Mobile) -->
+  <div class="fixed bottom-0 left-0 z-50 w-full h-16 bg-gray-800 sm:hidden">
+    <div class="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
+      <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-primary-500" data-tab="dashboard">
+        <i class="lni lni-grid-alt text-xl mb-1 group-hover:text-primary-500"></i>
+        <span class="text-[10px] group-hover:text-primary-500">Home</span>
+      </button>
+      <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-gray-400" data-tab="transactions">
+        <i class="lni lni-wallet text-xl mb-1 group-hover:text-primary-500"></i>
+        <span class="text-[10px] group-hover:text-primary-500">Trans</span>
+      </button>
+      <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-gray-400" data-tab="categories">
+        <i class="lni lni-tag text-xl mb-1 group-hover:text-primary-500"></i>
+        <span class="text-[10px] group-hover:text-primary-500">Cats</span>
+      </button>
+      <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-gray-400" data-tab="budgets">
+        <i class="lni lni-target text-xl mb-1 group-hover:text-primary-500"></i>
+        <span class="text-[10px] group-hover:text-primary-500">Budget</span>
+      </button>
+      <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-gray-400" data-tab="reports">
+        <i class="lni lni-graph text-xl mb-1 group-hover:text-primary-500"></i>
+        <span class="text-[10px] group-hover:text-primary-500">Report</span>
+      </button>
     </div>
+  </div>
 
-    <div id="transactions" class="tab-content">
-      <div class="header">
-        <h1>Transactions</h1>
-        <p>Manage your income and expenses</p>
-      </div>
-      <div class="card">
-        <div class="card-title">Add Transaction</div>
-        <form id="transactionForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Type</label>
-              <select id="type" class="form-select" required>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Amount</label>
-              <input type="number" id="amount" class="form-input" placeholder="0.00" step="0.01" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Date</label>
-              <input type="date" id="date" class="form-input" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Category</label>
-              <input type="text" id="category" class="form-input" placeholder="e.g., Food, Transport" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Description</label>
-            <input type="text" id="description" class="form-input" placeholder="Optional note" required>
-          </div>
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="recurring" class="checkbox">
-              <span>Recurring transaction</span>
-            </label>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Transaction</button>
-        </form>
-      </div>
-      <div class="card">
-        <div class="card-title">All Transactions</div>
-        <div id="allTransactions"></div>
-      </div>
-    </div>
-
-    <div id="categories" class="tab-content">
-      <div class="header">
-        <h1>Categories</h1>
-        <p>Organize your spending</p>
-      </div>
-      <div class="card">
-        <div class="card-title">Add Category</div>
-        <form id="categoryForm">
-          <div class="form-group">
-            <label class="form-label">Category Name</label>
-            <input type="text" id="catName" class="form-input" placeholder="e.g., Groceries" required>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Category</button>
-        </form>
-      </div>
-      <div class="card">
-        <div class="card-title">Your Categories</div>
-        <div id="allCategories"></div>
-      </div>
-    </div>
-
-    <div id="budgets" class="tab-content">
-      <div class="header">
-        <h1>Budgets</h1>
-        <p>Set spending limits</p>
-      </div>
-      <div class="card">
-        <div class="card-title">Add Budget</div>
-        <form id="budgetForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Category</label>
-              <input type="text" id="budCategory" class="form-input" placeholder="Category name" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Limit</label>
-              <input type="number" id="limit" class="form-input" placeholder="0.00" step="0.01" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Period</label>
-            <select id="period" class="form-select" required>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Budget</button>
-        </form>
-      </div>
-      <div id="allBudgets"></div>
-    </div>
-
-    <div id="reports" class="tab-content">
-      <div class="header">
-        <h1>Reports</h1>
-        <p>Analyze your spending patterns</p>
-      </div>
-      <div class="card">
-        <div class="card-title">Monthly Report</div>
-        <div class="chart-container">
-          <canvas id="monthlyChart"></canvas>
+  <!-- Budget Alert Modal -->
+  <div id="budgetAlertModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+    <div class="relative w-full max-w-md p-8 bg-gray-800 rounded-2xl shadow-2xl transform transition-all animate__animated animate__zoomIn">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-red-900/30 mb-6 animate__animated animate__pulse animate__infinite">
+          <i class="lni lni-warning text-6xl text-red-500"></i>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Export Data</div>
-        <p style="color: var(--muted); margin-bottom: 16px; font-size: 14px;">Download your transaction data as CSV</p>
-        <button class="btn btn-primary" onclick="window.location.href='/reports/csv'">Download CSV Report</button>
+        <h3 class="mb-4 text-3xl font-bold text-white font-serif tracking-wide">Budget Exceeded!</h3>
+        <p id="budgetAlertMessage" class="text-xl text-gray-300 mb-2">You've exceeded your budget!</p>
+        <div class="bg-gray-900/50 rounded-lg p-4 mb-8">
+            <p id="budgetAlertDetails" class="text-lg text-red-400 font-mono font-bold">Spent: ₹0.00 / Limit: ₹0.00</p>
+        </div>
+        <button onclick="closeBudgetAlert()" class="w-full text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 focus:ring-4 focus:outline-none focus:ring-red-900 font-bold rounded-xl text-lg px-5 py-4 text-center shadow-lg transform transition hover:scale-[1.02]">
+          Acknowledge
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Flowbite JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+  <!-- App Logic -->
   <script>
     const transactionForm = document.getElementById('transactionForm');
     const categoryForm = document.getElementById('categoryForm');
@@ -526,73 +423,190 @@
     let allBudgets = [];
 
     // Tab navigation
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    function switchTab(tabId) {
+      // Update Sidebar Active State
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        if (b.getAttribute('data-tab') === tabId) {
+            b.classList.add('bg-gray-700', 'text-primary-500');
+            b.classList.remove('text-customText');
+            b.querySelector('i').classList.add('text-primary-500');
+            b.querySelector('i').classList.remove('text-gray-400');
+        } else {
+            b.classList.remove('bg-gray-700', 'text-primary-500');
+            b.classList.add('text-customText');
+            b.querySelector('i').classList.remove('text-primary-500');
+            b.querySelector('i').classList.add('text-gray-400');
+        }
+      });
+
+      // Update Mobile Nav Active State
+      document.querySelectorAll('.nav-btn-mobile').forEach(b => {
+        if (b.getAttribute('data-tab') === tabId) {
+            b.classList.add('text-primary-500');
+            b.classList.remove('text-gray-400');
+            b.querySelector('i').classList.add('text-primary-500'); // Ensure icon color updates
+            b.querySelector('span').classList.add('text-primary-500'); // Ensure text color updates
+        } else {
+            b.classList.remove('text-primary-500');
+            b.classList.add('text-gray-400');
+            b.querySelector('i').classList.remove('text-primary-500');
+            b.querySelector('span').classList.remove('text-primary-500');
+        }
+      });
+
+      // Show Content
+      document.querySelectorAll('.tab-content').forEach(t => {
+        t.classList.add('hidden');
+        t.classList.remove('active');
+      });
+      
+      const content = document.getElementById(tabId);
+      if (content) {
+          content.classList.remove('hidden');
+          // Re-trigger animation
+          content.classList.remove('animate__fadeIn');
+          void content.offsetWidth; // trigger reflow
+          content.classList.add('animate__fadeIn');
+      }
+
+      if (tabId === 'dashboard') loadDashboard();
+      if (tabId === 'reports') loadReports();
+    }
+
+    document.querySelectorAll('.nav-btn, .nav-btn-mobile').forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tab).classList.add('active');
-        if (tab === 'reports') loadReports();
-        if (tab === 'dashboard') loadDashboard();
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
       });
     });
+
+    // Set default active tab
+    document.querySelector('.nav-btn[data-tab="dashboard"]').click();
 
     // Set default date to today
     document.getElementById('date').valueAsDate = new Date();
 
+    // Handle Type Change
+    document.getElementById('type').addEventListener('change', (e) => {
+      const type = e.target.value;
+      const catContainer = document.getElementById('categoryContainer');
+      const catSelect = document.getElementById('category');
+      
+      if (type === 'income') {
+        catContainer.classList.add('hidden');
+        catSelect.removeAttribute('required');
+      } else {
+        catContainer.classList.remove('hidden');
+        catSelect.setAttribute('required', 'true');
+      }
+    });
+
     transactionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const type = document.getElementById('type').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      let category = document.getElementById('category').value;
+      
+      if (type === 'income') {
+        category = 'Income';
+      }
+
       const data = {
-        type: document.getElementById('type').value,
-        amount: parseFloat(document.getElementById('amount').value),
+        type,
+        amount,
         date: document.getElementById('date').value,
-        category: document.getElementById('category').value,
+        category,
         description: document.getElementById('description').value,
         recurring: document.getElementById('recurring').checked
       };
       try {
-        const res = await fetch('/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const res = await fetch('/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
         await res.json();
         transactionForm.reset();
         document.getElementById('date').valueAsDate = new Date();
         await loadTransactions();
-        loadDashboard();
         showNotification('Transaction added successfully', 'success');
+        
+        if (type === 'expense') {
+          const budget = allBudgets.find(b => b.category === category);
+          if (budget) {
+            const spent = allTransactions
+              .filter(t => t.category === category && t.type === 'expense')
+              .reduce((sum, t) => sum + t.amount, 0);
+            if (spent > budget.limit) {
+              showBudgetAlert(category, spent, budget.limit);
+            }
+          }
+        }
       } catch (err) {
-        showNotification('Error adding transaction', 'error');
+        showNotification('Failed to add transaction', 'error');
       }
     });
+
+    function showBudgetAlert(category, spent, limit) {
+      const modal = document.getElementById('budgetAlertModal');
+      const message = document.getElementById('budgetAlertMessage');
+      const details = document.getElementById('budgetAlertDetails');
+      
+      message.textContent = `You've exceeded your ${category} budget!`;
+      details.textContent = `Spent: ₹${spent.toFixed(2)} / Limit: ₹${limit.toFixed(2)}`;
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeBudgetAlert() {
+      const modal = document.getElementById('budgetAlertModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
 
     categoryForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = { name: document.getElementById('catName').value };
       try {
-        const res = await fetch('/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const res = await fetch('/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
         await res.json();
         categoryForm.reset();
         await loadCategories();
         showNotification('Category added successfully', 'success');
       } catch (err) {
-        showNotification('Error adding category', 'error');
+        showNotification('Failed to add category', 'error');
       }
     });
 
     budgetForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
-        category: document.getElementById('budCategory').value,
-        limit: parseFloat(document.getElementById('limit').value),
-        period: document.getElementById('period').value
+        category: document.getElementById('budgetCategory').value,
+        limit: parseFloat(document.getElementById('budgetLimit').value),
+        period: document.getElementById('budgetPeriod').value
       };
       try {
-        const res = await fetch('/budgets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        await res.json();
+        const res = await fetch('/budgets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(result.error || 'Failed to add budget');
+        }
+        
         budgetForm.reset();
         await loadBudgets();
         showNotification('Budget added successfully', 'success');
       } catch (err) {
-        showNotification('Error adding budget', 'error');
+        showNotification(err.message, 'error');
       }
     });
 
@@ -601,43 +615,53 @@
         const res = await fetch('/transactions');
         allTransactions = await res.json();
         renderTransactions();
+        renderBudgets();
       } catch (err) {
-        console.error('Error loading transactions', err);
+        console.error(err);
       }
     }
 
     function renderTransactions() {
       const container = document.getElementById('allTransactions');
       if (allTransactions.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No transactions yet</p></div>';
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="lni lni-empty-file text-4xl mb-2"></i><p>No transactions yet</p></div>';
         return;
       }
-      container.innerHTML = allTransactions.map(t => `
-        <div class="list-item">
-          <div class="list-info">
-            <div class="list-title">${t.description}</div>
-            <div class="list-meta">${t.category} • ${new Date(t.date).toLocaleDateString()} ${t.recurring ? '🔄' : ''}</div>
+      
+      const html = allTransactions.map((t, index) => `
+        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors duration-200 animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.05}s">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full ${t.type === 'income' ? 'bg-secondary-900/50 text-secondary-500' : 'bg-red-900/50 text-red-500'}">
+              <i class="lni ${t.type === 'income' ? 'lni-arrow-up' : 'lni-arrow-down'}"></i>
+            </div>
+            <div>
+              <div class="font-semibold text-customText">${t.description || t.category}</div>
+              <div class="text-xs text-gray-400">${new Date(t.date).toLocaleDateString()} • ${t.category} ${t.recurring ? '• <i class="lni lni-reload"></i>' : ''}</div>
+            </div>
           </div>
-          <div class="list-amount ${t instanceof Object && t.constructor.name === 'Income' ? 'income' : 'expense'}">
-            ${t.amount > 0 ? '+' : ''}₹${Math.abs(t.amount).toFixed(2)}
+          <div class="font-bold ${t.type === 'income' ? 'text-secondary-500' : 'text-red-500'}">
+            ${t.type === 'income' ? '+' : '-'}₹${Math.abs(t.amount).toFixed(2)}
           </div>
         </div>
       `).join('');
+      
+      container.innerHTML = html;
 
+      // Recent transactions for dashboard
       const recent = document.getElementById('recentTransactions');
       const recentTrans = allTransactions.slice(-5).reverse();
       if (recentTrans.length === 0) {
-        recent.innerHTML = '<div class="empty-state"><p>No recent transactions</p></div>';
+        recent.innerHTML = '<div class="text-center py-8 text-gray-500"><p>No recent transactions</p></div>';
         return;
       }
-      recent.innerHTML = recentTrans.map(t => `
-        <div class="list-item">
-          <div class="list-info">
-            <div class="list-title">${t.description}</div>
-            <div class="list-meta">${t.category} • ${new Date(t.date).toLocaleDateString()}</div>
+      recent.innerHTML = recentTrans.map((t, index) => `
+        <div class="flex items-center justify-between p-3 hover:bg-gray-700/50 rounded transition-colors">
+          <div>
+            <div class="font-medium text-customText">${t.description || t.category}</div>
+            <div class="text-xs text-gray-500">${new Date(t.date).toLocaleDateString()}</div>
           </div>
-          <div class="list-amount ${t.amount > 0 ? 'income' : 'expense'}">
-            ${t.amount > 0 ? '+' : ''}₹${Math.abs(t.amount).toFixed(2)}
+          <div class="font-bold ${t.type === 'income' ? 'text-secondary-500' : 'text-red-500'}">
+            ${t.type === 'income' ? '+' : '-'}₹${Math.abs(t.amount).toFixed(2)}
           </div>
         </div>
       `).join('');
@@ -649,24 +673,29 @@
         allCategories = await res.json();
         renderCategories();
       } catch (err) {
-        console.error('Error loading categories', err);
+        console.error(err);
       }
     }
 
     function renderCategories() {
       const container = document.getElementById('allCategories');
       if (allCategories.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏷️</div><p>No categories yet</p></div>';
+        container.innerHTML = '<div class="text-center py-4 text-gray-500"><p>No categories yet</p></div>';
         return;
       }
       container.innerHTML = allCategories.map(c => `
-        <div class="list-item">
-          <div class="list-info">
-            <div class="list-title">${c.name}</div>
-          </div>
-          <span class="badge badge-success">Active</span>
+        <div class="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+          <span class="text-customText font-medium">${c.name}</span>
+          <span class="bg-secondary-900 text-secondary-300 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
         </div>
       `).join('');
+
+      // Populate select dropdowns
+      const catSelect = document.getElementById('category');
+      const budgetCatSelect = document.getElementById('budgetCategory');
+      const options = '<option value="">Select a category</option>' + allCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      catSelect.innerHTML = options;
+      budgetCatSelect.innerHTML = options;
     }
 
     async function loadBudgets() {
@@ -675,32 +704,38 @@
         allBudgets = await res.json();
         renderBudgets();
       } catch (err) {
-        console.error('Error loading budgets', err);
+        console.error(err);
       }
     }
 
     function renderBudgets() {
       const container = document.getElementById('allBudgets');
       if (allBudgets.length === 0) {
-        container.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">🎯</div><p>No budgets set</p></div></div>';
+        container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500"><p>No budgets set</p></div>';
         return;
       }
       container.innerHTML = allBudgets.map(b => {
         const spent = allTransactions
-          .filter(t => t.category === b.category && new Date(t.date).getMonth() === new Date().getMonth())
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+          .filter(t => t.category === b.category && t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
         const percentage = Math.min((spent / b.limit) * 100, 100);
-        const status = percentage > 90 ? 'danger' : percentage > 70 ? 'warning' : 'success';
+        let colorClass = 'bg-secondary-500';
+        if (percentage > 70) colorClass = 'bg-yellow-500';
+        if (percentage > 90) colorClass = 'bg-red-500';
+        
         return `
-          <div class="budget-card">
-            <div class="budget-header">
-              <div class="budget-category">${b.category}</div>
-              <div class="budget-amount">₹${spent.toFixed(2)} / ₹${b.limit}</div>
+          <div class="p-6 bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold text-customText">${b.category}</h3>
+              <span class="text-xs font-medium px-2.5 py-0.5 rounded bg-gray-700 text-gray-300 uppercase">${b.period}</span>
             </div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${percentage}%; background: var(--${status})"></div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium text-gray-400">Spent</span>
+              <span class="text-sm font-medium text-customText">₹${spent.toFixed(2)} / ₹${b.limit.toFixed(2)}</span>
             </div>
-            <div style="margin-top: 8px; font-size: 12px; color: var(--muted)">${b.period}</div>
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+              <div class="${colorClass} h-2.5 rounded-full transition-all duration-1000" style="width: ${percentage}%"></div>
+            </div>
           </div>
         `;
       }).join('');
@@ -711,24 +746,74 @@
         const res = await fetch('/reports/monthly');
         const data = await res.json();
         
-        document.getElementById('totalIncome').textContent = `₹${data.income.toFixed(2)}`;
-        document.getElementById('totalExpenses').textContent = `₹${data.expenses.toFixed(2)}`;
-        document.getElementById('balance').textContent = `₹${(data.income - data.expenses).toFixed(2)}`;
+        document.getElementById('income').textContent = `₹${data.income.toFixed(2)}`;
+        document.getElementById('expenses').textContent = `₹${data.expenses.toFixed(2)}`;
         
-        if (chart) {
-          chart.destroy();
-          chart = null;
+        const balance = data.income - data.expenses;
+        document.getElementById('balance').textContent = `₹${balance.toFixed(2)}`;
+        
+        const arrowEl = document.getElementById('balanceArrow');
+        if (balance >= 0) {
+          arrowEl.innerHTML = '<i class="lni lni-arrow-up text-secondary-500"></i>';
+        } else {
+          arrowEl.innerHTML = '<i class="lni lni-arrow-down text-red-500"></i>';
         }
+
+        const labels = Object.keys(data.byCategory);
+        const values = Object.values(data.byCategory);
+        // Custom colors matching theme
+        const colors = ['#BA875C', '#596B5F', '#A67650', '#46554b', '#845638', '#38443c', '#D1CAC2', '#6b7280'];
+
+        if (chart) chart.destroy();
         chart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderWidth: 0,
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { 
+                position: 'bottom', 
+                labels: { 
+                  color: '#9ca3af', 
+                  font: { family: 'Nunito Sans' },
+                  usePointStyle: true,
+                  padding: 20
+                } 
+              }
+            },
+            cutout: '70%'
+          }
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function loadReports() {
+      try {
+        const res = await fetch('/reports/monthly');
+        const data = await res.json();
+
+        if (monthlyChart) monthlyChart.destroy();
+        monthlyChart = new Chart(monthlyCtx, {
           type: 'bar',
           data: {
             labels: Object.keys(data.byCategory),
             datasets: [{
               label: 'Spending by Category',
               data: Object.values(data.byCategory),
-              backgroundColor: 'rgba(59, 130, 246, 0.8)',
-              borderColor: 'rgba(59, 130, 246, 1)',
-              borderWidth: 1
+              backgroundColor: '#BA875C',
+              borderRadius: 4,
+              barThickness: 20
             }]
           },
           options: {
@@ -739,87 +824,41 @@
             },
             scales: {
               y: { 
-                beginAtZero: true,
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: '#a1a1aa' }
+                grid: { color: '#374151' }, 
+                ticks: { color: '#9ca3af' },
+                beginAtZero: true
               },
-              x: {
-                grid: { display: false },
-                ticks: { color: '#a1a1aa' }
+              x: { 
+                grid: { display: false }, 
+                ticks: { color: '#9ca3af' } 
               }
             }
           }
         });
       } catch (err) {
-        console.error('Error loading dashboard', err);
-      }
-    }
-
-    async function loadReports() {
-      try {
-        const res = await fetch('/reports/monthly');
-        const data = await res.json();
-        
-        if (monthlyChart) {
-          monthlyChart.destroy();
-          monthlyChart = null;
-        }
-        monthlyChart = new Chart(monthlyCtx, {
-          type: 'doughnut',
-          data: {
-            labels: Object.keys(data.byCategory),
-            datasets: [{
-              data: Object.values(data.byCategory),
-              backgroundColor: [
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(239, 68, 68, 0.8)',
-                'rgba(245, 158, 11, 0.8)',
-                'rgba(168, 85, 247, 0.8)',
-                'rgba(236, 72, 153, 0.8)'
-              ],
-              borderColor: 'rgba(0, 0, 0, 0.1)',
-              borderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: { color: '#a1a1aa', padding: 15 }
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.error('Error loading reports', err);
+        console.error(err);
       }
     }
 
     function showNotification(message, type) {
       const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? 'var(--success)' : 'var(--danger)'};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 1000;
-        animation: slideIn 0.3s;
+      const bgColor = type === 'success' ? 'bg-secondary-600' : 'bg-red-600';
+      const icon = type === 'success' ? 'lni-checkmark-circle' : 'lni-close';
+      
+      notification.className = `fixed top-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 text-white ${bgColor} rounded-lg shadow dark:text-gray-400 space-x z-50 animate__animated animate__fadeInRight`;
+      notification.innerHTML = `
+        <i class="lni ${icon} text-2xl"></i>
+        <div class="ps-3 text-sm font-normal">${message}</div>
       `;
-      notification.textContent = message;
+      
       document.body.appendChild(notification);
       setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s';
-        setTimeout(() => notification.remove(), 300);
+        notification.classList.remove('animate__fadeInRight');
+        notification.classList.add('animate__fadeOutRight');
+        setTimeout(() => notification.remove(), 500);
       }, 3000);
     }
-
+    
     // Initial load
     loadTransactions();
     loadCategories();
