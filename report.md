@@ -823,4 +823,777 @@ The application provides practical value for personal finance management while s
 
 ---
 
+## 16. System Workflow & Architecture Mindmap
+
+### Complete Application Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         USER OPENS APPLICATION                          │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   BROWSER LOADS index.html                              │
+│                   • Tailwind CSS Loaded                                 │
+│                   • Chart.js Loaded                                     │
+│                   • JavaScript Initialized                              │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   DASHBOARD TAB LOADS (DEFAULT)                         │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │  1. fetch('/transactions')      ──────────────┐                │    │
+│  │  2. fetch('/budgets')           ──────────────┤                │    │
+│  │  3. Calculate totals                          │                │    │
+│  │  4. Render Chart.js doughnut chart            │                │    │
+│  └───────────────────────────────────────────────┼────────────────┘    │
+└───────────────────────────────────────────────────┼─────────────────────┘
+                                                    │
+                    ┌───────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        EXPRESS.JS SERVER                                │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │  app.get('/transactions', async (req, res) => {                │    │
+│  │    const result = await client.execute('SELECT * FROM ...');   │    │
+│  │    res.json(transactions);                                     │    │
+│  │  });                                                           │    │
+│  └───────────────────────────────┬────────────────────────────────┘    │
+└────────────────────────────────────┼───────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        TURSO DATABASE (LibSQL)                          │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │  • transactions table → SELECT all records                     │    │
+│  │  • budgets table → SELECT all budget limits                    │    │
+│  │  • categories table → SELECT category names                    │    │
+│  └───────────────────────────────┬────────────────────────────────┘    │
+└────────────────────────────────────┼───────────────────────────────────┘
+                                     │
+                                     │ Returns JSON data
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       FRONTEND RENDERS UI                               │
+│  • Update balance display (Total, Income, Expense)                     │
+│  • Generate spending chart with categories                             │
+│  • Display recent transactions list                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+                    USER INTERACTION FLOWS
+                    =====================
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  FLOW 1: ADD NEW TRANSACTION                                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  User clicks "Transactions" tab                                         │
+│         │                                                                │
+│         ▼                                                                │
+│  Fills form: Type, Amount, Date, Category, Description                  │
+│         │                                                                │
+│         ▼                                                                │
+│  Clicks "Add Transaction" button                                        │
+│         │                                                                │
+│         ▼                                                                │
+│  JavaScript validates form                                              │
+│         │                                                                │
+│         ▼                                                                │
+│  fetch('/transactions', { method: 'POST', body: JSON.stringify(data) }) │
+│         │                                                                │
+│         ▼                                                                │
+│  Express route: POST /transactions                                      │
+│         │                                                                │
+│         ▼                                                                │
+│  Generate unique ID with crypto.randomUUID()                            │
+│         │                                                                │
+│         ▼                                                                │
+│  INSERT INTO transactions VALUES (...)                                  │
+│         │                                                                │
+│         ▼                                                                │
+│  Check if expense exceeds budget limit                                  │
+│         │                                                                │
+│         ├─────► IF EXCEEDED ──► Return { exceeded: true, ... }          │
+│         │                              │                                │
+│         │                              ▼                                │
+│         │                     showBudgetAlert() modal                   │
+│         │                                                                │
+│         └─────► IF OK ──► Return { success: true }                      │
+│                                    │                                    │
+│                                    ▼                                    │
+│                         Reload transactions list                        │
+│                         Update dashboard chart                          │
+│                         Show success notification                       │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  FLOW 2: SET BUDGET ALERT                                               │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  User clicks "Budgets" tab                                              │
+│         │                                                                │
+│         ▼                                                                │
+│  Fills form: Category, Limit Amount, Period                             │
+│         │                                                                │
+│         ▼                                                                │
+│  fetch('/budgets', { method: 'POST', ... })                             │
+│         │                                                                │
+│         ▼                                                                │
+│  INSERT INTO budgets (category, limit_amount, period)                   │
+│         │                                                                │
+│         ▼                                                                │
+│  Budgets list reloaded with progress bars                               │
+│         │                                                                │
+│         ▼                                                                │
+│  For each budget:                                                       │
+│    • Calculate spent = SUM(transactions WHERE category = X)             │
+│    • Calculate percentage = (spent / limit) * 100                       │
+│    • Color code: Green < 70%, Yellow < 90%, Red >= 90%                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  FLOW 3: GENERATE MONTHLY REPORT                                        │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  User clicks "Reports" tab                                              │
+│         │                                                                │
+│         ▼                                                                │
+│  fetch('/reports/monthly')                                              │
+│         │                                                                │
+│         ▼                                                                │
+│  SQL: SELECT category, SUM(amount) FROM transactions                    │
+│       WHERE type='expense' GROUP BY category                            │
+│         │                                                                │
+│         ▼                                                                │
+│  Returns { Food: 5000, Transport: 2000, ... }                           │
+│         │                                                                │
+│         ▼                                                                │
+│  Render Bar Chart with Chart.js                                         │
+│         │                                                                │
+│         ▼                                                                │
+│  User clicks "Export CSV"                                               │
+│         │                                                                │
+│         ▼                                                                │
+│  fetch('/reports/csv')                                                  │
+│         │                                                                │
+│         ▼                                                                │
+│  Backend generates CSV string                                           │
+│  'Date,Type,Category,Amount,Description\n...'                           │
+│         │                                                                │
+│         ▼                                                                │
+│  Browser downloads file as 'expense-report.csv'                         │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 17. Technology Stack Integration Flow
+
+### Frontend → Backend → Database Architecture
+
+```
+┌───────────────────────────────────────────────────────────────────────────┐
+│                           FRONTEND LAYER                                  │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │   HTML5     │  │  Tailwind   │  │  Chart.js   │  │  Vanilla    │    │
+│  │   (DOM)     │  │    CSS      │  │  (Canvas)   │  │     JS      │    │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
+│         │                │                │                │            │
+│         └────────────────┴────────────────┴────────────────┘            │
+│                              │                                           │
+│                              ▼                                           │
+│              ┌──────────────────────────────────┐                        │
+│              │  User Interaction Events         │                        │
+│              │  • Form submissions              │                        │
+│              │  • Button clicks                 │                        │
+│              │  • Tab navigation                │                        │
+│              └──────────────┬───────────────────┘                        │
+└─────────────────────────────┼────────────────────────────────────────────┘
+                              │
+                              ▼ fetch() API calls
+┌───────────────────────────────────────────────────────────────────────────┐
+│                           API COMMUNICATION                               │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  POST /transactions          GET /transactions                           │
+│  POST /categories      ◄───► GET /categories                             │
+│  POST /budgets               GET /budgets                                │
+│  GET /reports/monthly        GET /reports/csv                            │
+│                                                                           │
+│  Request Format: { method: 'POST', headers: {...}, body: JSON }          │
+│  Response Format: JSON { data: [...], success: true }                    │
+│                                                                           │
+└─────────────────────────────┬─────────────────────────────────────────────┘
+                              │
+                              ▼ HTTP Requests
+┌───────────────────────────────────────────────────────────────────────────┐
+│                          BACKEND LAYER                                    │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                    Node.js Runtime                                │   │
+│  │  ┌────────────────────────────────────────────────────────────┐  │   │
+│  │  │                 Express.js Framework                        │  │   │
+│  │  │  ┌──────────────────────────────────────────────────────┐  │  │   │
+│  │  │  │              TypeScript Layer                         │  │  │   │
+│  │  │  │  • Type checking                                     │  │  │   │
+│  │  │  │  • Interfaces (ITransaction, IBudget, ...)         │  │  │   │
+│  │  │  │  • Classes (Transaction, Income, Expense, ...)     │  │  │   │
+│  │  │  └──────────────────────────────────────────────────────┘  │  │   │
+│  │  │                                                              │  │   │
+│  │  │  ┌──────────────────────────────────────────────────────┐  │  │   │
+│  │  │  │           Express Route Handlers                     │  │  │   │
+│  │  │  │                                                       │  │  │   │
+│  │  │  │  app.get('/transactions', async (req, res) => {     │  │  │   │
+│  │  │  │    const result = await client.execute(...);        │  │  │   │
+│  │  │  │    res.json(result.rows);                           │  │  │   │
+│  │  │  │  });                                                 │  │  │   │
+│  │  │  │                                                       │  │  │   │
+│  │  │  │  app.post('/transactions', async (req, res) => {    │  │  │   │
+│  │  │  │    const { type, amount, ... } = req.body;          │  │  │   │
+│  │  │  │    await client.execute('INSERT INTO ...');         │  │  │   │
+│  │  │  │  });                                                 │  │  │   │
+│  │  │  └──────────────────────────────────────────────────────┘  │  │   │
+│  │  │                                                              │  │   │
+│  │  │  ┌──────────────────────────────────────────────────────┐  │  │   │
+│  │  │  │               Middleware                              │  │  │   │
+│  │  │  │  • express.json() - Parse JSON body                  │  │  │   │
+│  │  │  │  • express.static('public') - Serve HTML/CSS/JS     │  │  │   │
+│  │  │  └──────────────────────────────────────────────────────┘  │  │   │
+│  │  └──────────────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │              @libsql/client Database Driver                       │   │
+│  │  createClient({                                                   │   │
+│  │    url: 'libsql://database.turso.io',                            │   │
+│  │    authToken: 'JWT_TOKEN'                                         │   │
+│  │  })                                                               │   │
+│  └────────────────────────────┬─────────────────────────────────────┘   │
+└───────────────────────────────┼───────────────────────────────────────────┘
+                                │
+                                ▼ SQL Queries
+┌───────────────────────────────────────────────────────────────────────────┐
+│                           DATABASE LAYER                                  │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │              Turso Database (LibSQL/SQLite)                       │   │
+│  │  • Edge-hosted distributed database                              │   │
+│  │  • Global replication for low latency                            │   │
+│  │  • SQLite wire protocol                                          │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                           │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐      │
+│  │  transactions    │  │   categories     │  │     budgets      │      │
+│  │  ──────────────  │  │  ──────────────  │  │  ──────────────  │      │
+│  │  id (PK)         │  │  id (PK)         │  │  id (PK)         │      │
+│  │  type            │  │  name            │  │  category        │      │
+│  │  amount          │  └──────────────────┘  │  limit_amount    │      │
+│  │  date            │                        │  period          │      │
+│  │  category ───────┼────────────────────────┤                  │      │
+│  │  description     │                        └──────────────────┘      │
+│  │  recurring       │                                                   │
+│  └──────────────────┘                                                   │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+
+        DATA FLOW EXAMPLE: Adding an Expense
+        =====================================
+
+┌─────────────────┐
+│   User Input    │  User fills form in "Transactions" tab
+│   (Frontend)    │  • Type: Expense
+└────────┬────────┘  • Amount: 500
+         │           • Category: Food
+         │           • Description: Groceries
+         ▼
+┌─────────────────┐
+│  Fetch API Call │  fetch('/transactions', {
+│   (JavaScript)  │    method: 'POST',
+└────────┬────────┘    body: JSON.stringify({...})
+         │           })
+         │
+         ▼ HTTP POST
+┌─────────────────┐
+│ Express Handler │  app.post('/transactions', async (req, res) => {
+│   (Backend)     │    const data = req.body;
+└────────┬────────┘    const id = crypto.randomUUID();
+         │             ...
+         │           });
+         ▼
+┌─────────────────┐
+│  SQL Execute    │  client.execute(`
+│  (Turso Client) │    INSERT INTO transactions
+└────────┬────────┘    VALUES (?, ?, ?, ?, ?, ?, ?)
+         │           `, [id, type, amount, ...]);
+         │
+         ▼
+┌─────────────────┐
+│ Database Write  │  Turso writes to transactions table
+│   (Turso DB)    │  Replicates to edge locations
+└────────┬────────┘
+         │
+         │ Response
+         ▼
+┌─────────────────┐
+│  Check Budget   │  SELECT SUM(amount) FROM transactions
+│    (Backend)    │  WHERE category = 'Food' AND type = 'expense'
+└────────┬────────┘  Compare with budget limit
+         │
+         ├─────► IF spent > limit ──► return { exceeded: true }
+         │                                      │
+         │                                      ▼
+         │                              Frontend shows alert modal
+         │
+         └─────► IF OK ──► return { success: true }
+                                    │
+                                    ▼
+                           Frontend refreshes transaction list
+                           Updates dashboard chart
+```
+
+---
+
+## 18. Core Code Snippets
+
+### 1. Database Connection & Initialization
+
+```typescript
+import { createClient } from '@libsql/client';
+
+// Create Turso database client
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
+
+// Initialize database tables
+const initDB = async () => {
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS transactions (
+      id TEXT PRIMARY KEY,
+      type TEXT,
+      amount REAL,
+      date TEXT,
+      category TEXT,
+      description TEXT,
+      recurring INTEGER
+    )
+  `);
+  
+  // Seed default categories if empty
+  const catResult = await client.execute(
+    'SELECT count(*) as count FROM categories'
+  );
+  if (Number(catResult.rows[0].count) === 0) {
+    const categories = ['Food', 'Transport', 'Entertainment', 'Utilities', 'Shopping'];
+    for (const cat of categories) {
+      await client.execute(
+        "INSERT INTO categories (id, name) VALUES (?, ?)",
+        [crypto.randomUUID(), cat]
+      );
+    }
+  }
+};
+```
+
+---
+
+### 2. TypeScript Class Inheritance
+
+```typescript
+// Base Transaction class
+export class Transaction implements ITransaction {
+  constructor(
+    public id: string,
+    public type: string,
+    public amount: number,
+    public date: Date,
+    public category: string,
+    public description: string,
+    public recurring: boolean = false
+  ) {}
+}
+
+// Income class extends Transaction
+export class Income extends Transaction {
+  constructor(
+    id: string,
+    amount: number,
+    date: Date,
+    category: string,
+    description: string,
+    recurring: boolean = false
+  ) {
+    super(id, 'income', amount, date, category, description, recurring);
+  }
+}
+
+// Expense class extends Transaction
+export class Expense extends Transaction {
+  constructor(
+    id: string,
+    amount: number,
+    date: Date,
+    category: string,
+    description: string,
+    recurring: boolean = false
+  ) {
+    super(id, 'expense', amount, date, category, description, recurring);
+  }
+}
+```
+
+**Key Concept:** The `super()` keyword calls the parent class constructor, avoiding code duplication.
+
+---
+
+### 3. Express POST Route with Budget Check
+
+```typescript
+app.post('/transactions', async (req, res) => {
+  try {
+    const { type, amount, date, category, description, recurring } = req.body;
+    const id = crypto.randomUUID();
+    
+    // Insert transaction into database
+    await client.execute(
+      `INSERT INTO transactions (id, type, amount, date, category, description, recurring)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, type, amount, date, category, description, recurring ? 1 : 0]
+    );
+    
+    // Check if expense exceeds budget
+    if (type === 'expense') {
+      const budgetResult = await client.execute(
+        'SELECT limit_amount FROM budgets WHERE category = ?',
+        [category]
+      );
+      
+      if (budgetResult.rows.length > 0) {
+        const limit = Number(budgetResult.rows[0].limit_amount);
+        
+        // Calculate total spent in this category
+        const spentResult = await client.execute(
+          `SELECT SUM(amount) as total FROM transactions 
+           WHERE category = ? AND type = 'expense'`,
+          [category]
+        );
+        
+        const spent = Number(spentResult.rows[0].total) || 0;
+        
+        if (spent > limit) {
+          return res.json({
+            success: true,
+            exceeded: true,
+            category,
+            spent,
+            limit
+          });
+        }
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to add transaction' });
+  }
+});
+```
+
+**Key Concept:** This route demonstrates async/await, SQL parameterized queries, and business logic (budget checking).
+
+---
+
+### 4. Frontend Fetch API with Async/Await
+
+```javascript
+// Add transaction form submission
+transactionForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const data = {
+    type: document.getElementById('type').value,
+    amount: parseFloat(document.getElementById('amount').value),
+    date: document.getElementById('date').value,
+    category: document.getElementById('category').value,
+    description: document.getElementById('description').value,
+    recurring: document.getElementById('recurring').checked
+  };
+  
+  try {
+    const res = await fetch('/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await res.json();
+    
+    if (result.exceeded) {
+      showBudgetAlert(result.category, result.spent, result.limit);
+    }
+    
+    await loadTransactions();
+    showNotification('Transaction added successfully!', 'success');
+    transactionForm.reset();
+  } catch (error) {
+    showNotification('Failed to add transaction', 'error');
+  }
+});
+```
+
+**Key Concept:** Demonstrates event handling, form data extraction, fetch API, and error handling.
+
+---
+
+### 5. Chart.js Dynamic Data Visualization
+
+```javascript
+async function loadDashboard() {
+  const res = await fetch('/transactions');
+  const transactions = await res.json();
+  
+  // Calculate totals
+  let income = 0, expense = 0;
+  const categoryMap = {};
+  
+  transactions.forEach(t => {
+    if (t.type === 'income') income += t.amount;
+    else {
+      expense += t.amount;
+      categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+    }
+  });
+  
+  // Update UI
+  document.getElementById('totalBalance').textContent = 
+    `₹${(income - expense).toFixed(2)}`;
+  document.getElementById('totalIncome').textContent = 
+    `₹${income.toFixed(2)}`;
+  document.getElementById('totalExpense').textContent = 
+    `₹${expense.toFixed(2)}`;
+  
+  // Render doughnut chart
+  const ctx = document.getElementById('spendingChart').getContext('2d');
+  const labels = Object.keys(categoryMap);
+  const data = Object.values(categoryMap);
+  const colors = [
+    '#BA875C', '#596B5F', '#FF6384', '#36A2EB', 
+    '#FFCE56', '#4BC0C0', '#9966FF'
+  ];
+  
+  if (chart) chart.destroy(); // Destroy previous chart
+  
+  chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors.slice(0, labels.length),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+```
+
+**Key Concept:** Data aggregation, DOM manipulation, and Chart.js configuration for interactive visualizations.
+
+---
+
+### 6. Budget Alert Modal Logic
+
+```javascript
+function showBudgetAlert(category, spent, limit) {
+  const modal = document.getElementById('budgetAlertModal');
+  const message = document.getElementById('budgetAlertMessage');
+  const details = document.getElementById('budgetAlertDetails');
+  
+  message.textContent = `⚠️ You've exceeded your ${category} budget!`;
+  details.innerHTML = `
+    <p>Spent: <span class="text-red-500 font-bold">₹${spent.toFixed(2)}</span></p>
+    <p>Limit: <span class="text-gray-400">₹${limit.toFixed(2)}</span></p>
+    <p class="mt-2 text-sm">Over budget by: ₹${(spent - limit).toFixed(2)}</p>
+  `;
+  
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+// Close modal button
+document.getElementById('closeBudgetAlert').addEventListener('click', () => {
+  const modal = document.getElementById('budgetAlertModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+});
+```
+
+**Key Concept:** DOM manipulation for dynamic modal display with calculated budget overrun.
+
+---
+
+### 7. CSV Export Functionality
+
+```typescript
+app.get('/reports/csv', async (req, res) => {
+  try {
+    const result = await client.execute(
+      'SELECT * FROM transactions ORDER BY date DESC'
+    );
+    
+    // Build CSV string
+    let csv = 'Date,Type,Category,Amount,Description,Recurring\n';
+    
+    result.rows.forEach(row => {
+      csv += `${row.date},${row.type},${row.category},${row.amount},"${row.description}",${row.recurring ? 'Yes' : 'No'}\n`;
+    });
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=expense-report.csv');
+    res.send(csv);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to generate CSV' });
+  }
+});
+```
+
+**Key Concept:** Server-side CSV generation and file download using HTTP headers.
+
+---
+
+### 8. Tab Navigation System
+
+```javascript
+function switchTab(tabId) {
+  // Hide all tab contents
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.add('hidden');
+  });
+  
+  // Remove active styling from all nav links
+  document.querySelectorAll('.sidebar-link, .mobile-nav-link').forEach(link => {
+    link.classList.remove('bg-gray-700', 'text-primary-500');
+  });
+  
+  // Show selected tab
+  document.getElementById(tabId).classList.remove('hidden');
+  
+  // Highlight active nav link
+  document.querySelectorAll(`[onclick*="${tabId}"]`).forEach(link => {
+    link.classList.add('bg-gray-700', 'text-primary-500');
+  });
+  
+  // Load data for specific tabs
+  if (tabId === 'dashboard') loadDashboard();
+  else if (tabId === 'transactions') loadTransactions();
+  else if (tabId === 'budgets') loadBudgets();
+  else if (tabId === 'reports') loadReports();
+}
+```
+
+**Key Concept:** Single-page application (SPA) navigation without page reloads.
+
+---
+
+### 9. Budget Progress Bar Rendering
+
+```javascript
+async function loadBudgets() {
+  const [budgets, transactions] = await Promise.all([
+    fetch('/budgets').then(r => r.json()),
+    fetch('/transactions').then(r => r.json())
+  ]);
+  
+  const list = document.getElementById('budgetsList');
+  list.innerHTML = '';
+  
+  budgets.forEach(budget => {
+    // Calculate spent amount
+    const spent = transactions
+      .filter(t => t.type === 'expense' && t.category === budget.category)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const percentage = Math.min((spent / budget.limit_amount) * 100, 100);
+    
+    // Determine color based on percentage
+    let colorClass = 'bg-green-500';
+    if (percentage >= 90) colorClass = 'bg-red-500';
+    else if (percentage >= 70) colorClass = 'bg-yellow-500';
+    
+    const html = `
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <div class="flex justify-between mb-2">
+          <span class="font-semibold">${budget.category}</span>
+          <span class="text-sm">₹${spent.toFixed(2)} / ₹${budget.limit_amount}</span>
+        </div>
+        <div class="w-full bg-gray-700 rounded-full h-2.5">
+          <div class="${colorClass} h-2.5 rounded-full transition-all duration-300" 
+               style="width: ${percentage}%"></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">${percentage.toFixed(1)}% used</p>
+      </div>
+    `;
+    
+    list.innerHTML += html;
+  });
+}
+```
+
+**Key Concept:** Parallel API calls with `Promise.all()`, data aggregation, and dynamic styling based on calculations.
+
+---
+
+### 10. Express Middleware Configuration
+
+```typescript
+import express from 'express';
+import path from 'path';
+
+const app = express();
+
+// Parse JSON request bodies
+app.use(express.json());
+
+// Serve static files from 'public' directory
+app.use(express.static('public'));
+
+// CORS headers (if needed for production)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+```
+
+**Key Concept:** Middleware functions process requests in order, adding functionality like JSON parsing and error handling.
+
+---
+
 *This report was prepared as part of the Web Technologies Lab Project.*
