@@ -144,11 +144,11 @@
     </div>
   </aside>
 
-  <!-- Main Content -->
+  
   <div class="p-4 sm:ml-64 min-h-screen pb-20 sm:pb-4">
     <div class="p-4 mt-4">
       
-      <!-- Dashboard -->
+     
       <div id="dashboard" class="tab-content animate__animated animate__fadeIn">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Financial Overview</h1>
@@ -156,7 +156,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <!-- Balance Card -->
+         
           <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
             <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Balance</h5>
             <div class="flex items-center">
@@ -165,13 +165,13 @@
             </div>
             <p class="mt-2 text-xs text-gray-500">Updated just now</p>
           </div>
-          <!-- Income Card -->
+        
           <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
             <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Income</h5>
             <p id="income" class="text-3xl font-bold text-secondary-500">₹0.00</p>
             <p class="mt-2 text-xs text-gray-500">This month</p>
           </div>
-          <!-- Expenses Card -->
+          
           <div class="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-750 transition-all duration-300 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
             <h5 class="mb-2 text-sm font-bold tracking-tight text-gray-400 uppercase">Total Expenses</h5>
             <p id="expenses" class="text-3xl font-bold text-red-500">₹0.00</p>
@@ -189,13 +189,13 @@
           <div class="p-6 bg-gray-800 rounded-lg shadow animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
             <h5 class="mb-4 text-xl font-bold text-customText font-serif pl-3">Recent Transactions</h5>
             <div id="recentTransactions" class="space-y-3">
-              <!-- Transactions injected here -->
+              
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Transactions -->
+      
       <div id="transactions" class="tab-content hidden animate__animated animate__fadeIn">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Transactions</h1>
@@ -203,7 +203,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Add Transaction Form -->
+          
           <div class="lg:col-span-1">
             <div class="p-6 bg-gray-800 rounded-lg shadow">
               <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">Add New</h5>
@@ -242,12 +242,12 @@
             </div>
           </div>
 
-          <!-- Transaction List -->
+        
           <div class="lg:col-span-2">
             <div class="p-6 bg-gray-800 rounded-lg shadow">
               <h5 class="mb-6 text-xl font-bold text-customText font-serif pl-3">History</h5>
               <div id="allTransactions" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                <!-- List items -->
+              
               </div>
             </div>
           </div>
@@ -282,7 +282,6 @@
         </div>
       </div>
 
-      <!-- Budgets -->
       <div id="budgets" class="tab-content hidden animate__animated animate__fadeIn">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Budgets</h1>
@@ -319,13 +318,13 @@
 
           <div class="lg:col-span-2">
             <div id="allBudgets" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Budgets list -->
+              
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Reports -->
+  
       <div id="reports" class="tab-content hidden animate__animated animate__fadeIn">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-primary-500 font-serif mb-2">Reports & Insights</h1>
@@ -356,7 +355,6 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation (Mobile) -->
   <div class="fixed bottom-0 left-0 z-50 w-full h-16 bg-gray-800 sm:hidden">
     <div class="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
       <button type="button" class="nav-btn-mobile inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group text-primary-500" data-tab="dashboard">
@@ -382,7 +380,6 @@
     </div>
   </div>
 
-  <!-- Budget Alert Modal -->
   <div id="budgetAlertModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
     <div class="relative w-full max-w-md p-8 bg-gray-800 rounded-2xl shadow-2xl transform transition-all animate__animated animate__zoomIn">
       <div class="text-center">
@@ -401,10 +398,9 @@
     </div>
   </div>
 
-  <!-- Flowbite JS -->
+ 
   <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
-  <!-- App Logic -->
   <script>
     const transactionForm = document.getElementById('transactionForm');
     const categoryForm = document.getElementById('categoryForm');
@@ -434,13 +430,12 @@
         }
       });
 
-      // Update Mobile Nav Active State
       document.querySelectorAll('.nav-btn-mobile').forEach(b => {
         if (b.getAttribute('data-tab') === tabId) {
             b.classList.add('text-primary-500');
             b.classList.remove('text-gray-400');
-            b.querySelector('i').classList.add('text-primary-500'); // Ensure icon color updates
-            b.querySelector('span').classList.add('text-primary-500'); // Ensure text color updates
+            b.querySelector('i').classList.add('text-primary-500'); 
+            b.querySelector('span').classList.add('text-primary-500'); 
         } else {
             b.classList.remove('text-primary-500');
             b.classList.add('text-gray-400');
@@ -449,7 +444,7 @@
         }
       });
 
-      // Show Content
+      
       document.querySelectorAll('.tab-content').forEach(t => {
         t.classList.add('hidden');
         t.classList.remove('active');
@@ -458,9 +453,9 @@
       const content = document.getElementById(tabId);
       if (content) {
           content.classList.remove('hidden');
-          // Re-trigger animation
+          
           content.classList.remove('animate__fadeIn');
-          void content.offsetWidth; // trigger reflow
+          void content.offsetWidth; 
           content.classList.add('animate__fadeIn');
       }
 
@@ -475,13 +470,11 @@
       });
     });
 
-    // Set default active tab
+   
     document.querySelector('.nav-btn[data-tab="dashboard"]').click();
 
-    // Set default date to today
     document.getElementById('date').valueAsDate = new Date();
 
-    // Handle Type Change
     function updateCategoryVisibility() {
       const type = document.getElementById('type').value;
       const catContainer = document.getElementById('categoryContainer');
@@ -498,7 +491,6 @@
     
     document.getElementById('type').addEventListener('change', updateCategoryVisibility);
     
-    // Initialize category visibility on page load
     updateCategoryVisibility();
 
     transactionForm.addEventListener('submit', async (e) => {
@@ -528,8 +520,8 @@
         await res.json();
         transactionForm.reset();
         document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('type').value = 'expense'; // Reset to expense
-        updateCategoryVisibility(); // Update category visibility after reset
+        document.getElementById('type').value = 'expense'; 
+        updateCategoryVisibility(); 
         await loadTransactions();
         showNotification('Transaction added successfully', 'success');
         
