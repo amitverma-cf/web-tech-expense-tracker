@@ -1,4 +1,3 @@
-
 const transactionForm = document.getElementById('transactionForm');
 const categoryForm = document.getElementById('categoryForm');
 const budgetForm = document.getElementById('budgetForm');
