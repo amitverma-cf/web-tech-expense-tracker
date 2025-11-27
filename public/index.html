@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExpenseTrack Pro</title>
+  <title>ExpenseTrack</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -487,19 +487,24 @@
     document.getElementById('date').valueAsDate = new Date();
 
     // Handle Type Change
-    document.getElementById('type').addEventListener('change', (e) => {
-      const type = e.target.value;
+    function updateCategoryVisibility() {
+      const type = document.getElementById('type').value;
       const catContainer = document.getElementById('categoryContainer');
       const catSelect = document.getElementById('category');
       
       if (type === 'income') {
-        catContainer.classList.add('hidden');
+        catContainer.style.display = 'none';
         catSelect.removeAttribute('required');
       } else {
-        catContainer.classList.remove('hidden');
+        catContainer.style.display = 'block';
         catSelect.setAttribute('required', 'true');
       }
-    });
+    }
+    
+    document.getElementById('type').addEventListener('change', updateCategoryVisibility);
+    
+    // Initialize category visibility on page load
+    updateCategoryVisibility();
 
     transactionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -528,6 +533,8 @@
         await res.json();
         transactionForm.reset();
         document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('type').value = 'expense'; // Reset to expense
+        updateCategoryVisibility(); // Update category visibility after reset
         await loadTransactions();
         showNotification('Transaction added successfully', 'success');
         

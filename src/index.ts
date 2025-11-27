@@ -210,6 +210,31 @@ app.get('/reports/csv', async (req, res) => {
   }
 });
 
+// Delete all transactions
+app.delete('/transactions', async (req, res) => {
+  try {
+    await client.execute('DELETE FROM transactions');
+    res.json({ message: 'All transactions deleted' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to delete transactions' });
+  }
+});
+
+// Delete single transaction
+app.delete('/transactions/:id', async (req, res) => {
+  try {
+    await client.execute({
+      sql: 'DELETE FROM transactions WHERE id = ?',
+      args: [req.params.id]
+    });
+    res.json({ message: 'Transaction deleted' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to delete transaction' });
+  }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
