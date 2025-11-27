@@ -42,7 +42,6 @@ const initDB = async () => {
     )
   `);
 
-  // Check if categories exist, if not add defaults
   const catResult = await client.execute('SELECT count(*) as count FROM categories');
   if (Number(catResult.rows[0].count) === 0) {
     await client.execute("INSERT INTO categories (id, name) VALUES ('1', 'Food')");
@@ -123,7 +122,6 @@ app.post('/budgets', async (req, res) => {
   const { category, limit, period } = req.body;
   
   try {
-    // Check for existing budget
     const existing = await client.execute({
       sql: 'SELECT * FROM budgets WHERE category = ? AND period = ?',
       args: [category, period]
@@ -210,7 +208,6 @@ app.get('/reports/csv', async (req, res) => {
   }
 });
 
-// Delete all transactions
 app.delete('/transactions', async (req, res) => {
   try {
     await client.execute('DELETE FROM transactions');
@@ -221,7 +218,6 @@ app.delete('/transactions', async (req, res) => {
   }
 });
 
-// Delete single transaction
 app.delete('/transactions/:id', async (req, res) => {
   try {
     await client.execute({

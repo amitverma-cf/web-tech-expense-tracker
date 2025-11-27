@@ -65,7 +65,7 @@ export class Budget implements IBudget {
   id: string;
   category: string;
   limit: number;
-  period: string; // e.g., 'monthly'
+  period: string;
 
   constructor(id: string, category: string, limit: number, period: string) {
     this.id = id;
